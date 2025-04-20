@@ -1,3 +1,6 @@
+curl  https://raw.githubusercontent.com/pranay11jk/codes/refs/heads/main/dc%20exps.txt 
+curl https://tinyurl.com/k2r96v3x
+
 dc exps 
 
 //dc exp 2
