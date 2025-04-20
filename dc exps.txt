@@ -1,0 +1,2671 @@
+dc exps 
+
+//dc exp 2
+
+ Calculator.java
+
+public interface Calculator
+    extends java.rmi.Remote {
+    
+    public long add(long a, long b)
+        throws java.rmi.RemoteException;
+    
+    public long sub(long a, long b)
+        throws java.rmi.RemoteException;
+    
+    public long mul(long a, long b)
+        throws java.rmi.RemoteException;
+    
+    public long div(long a, long b)
+        throws java.rmi.RemoteException;
+}
+
+
+// CalculatorClient.java
+
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
+
+public class CalculatorClient {
+
+    public static void main(String[] args) {
+        try {
+            Calculator c = (Calculator)
+                Naming.lookup("rmi://localhost/CalculatorService");
+            
+            System.out.println(c.sub(4, 3));
+            System.out.println(c.add(4, 5));
+            System.out.println(c.mul(3, 6));
+            System.out.println(c.div(9, 3));
+
+        } catch (MalformedURLException murle) {
+            System.out.println();
+            System.out.println("MalformedURLException");
+            System.out.println(murle);
+        } catch (RemoteException re) {
+            System.out.println();
+            System.out.println("RemoteException");
+            System.out.println(re);
+        } catch (NotBoundException nbe) {
+            System.out.println();
+            System.out.println("NotBoundException");
+            System.out.println(nbe);
+        } catch (java.lang.ArithmeticException ae) {
+            System.out.println();
+            System.out.println("java.lang.ArithmeticException");
+            System.out.println(ae);
+        }
+    }
+}
+
+ 
+// CalculatorServer.java
+
+import java.rmi.Naming;
+
+public class CalculatorServer {
+
+    public CalculatorServer() {
+        try {
+            Calculator c = new CalculatorImpl();
+            Naming.rebind("rmi://localhost:1099/CalculatorService", c);
+        } catch (Exception e) {
+            System.out.println("Trouble: " + e);
+        }
+    }
+
+    public static void main(String args[]) {
+        new CalculatorServer();
+    }
+}
+
+
+// CalculatorImpl.java
+
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+
+public class CalculatorImpl 
+    extends UnicastRemoteObject 
+    implements Calculator {
+
+    // Implementations must have an explicit constructor
+    // in order to declare the RemoteException exception
+    public CalculatorImpl() 
+        throws RemoteException {
+        super();
+    }
+
+    public long add(long a, long b) 
+        throws RemoteException {
+        return a + b;
+    }
+
+    public long sub(long a, long b) 
+        throws RemoteException {
+        return a - b;
+    }
+
+    public long mul(long a, long b) 
+        throws RemoteException {
+        return a * b;
+    }
+
+    public long div(long a, long b) 
+        throws RemoteException {
+        return a / b;
+    }
+}
+
+// output 
+
+C:\Users\Khan>cd Desktop
+
+C:\Users\Khan\Desktop>cd dc_2
+
+C:\Users\Khan\Desktop\dc_2>javac *.java
+
+C:\Users\Khan\Desktop\dc_2>where rmiregistry
+C:\MinGW\bin\rmiregistry.exe
+C:\Program Files\Java\jdk-20\bin\rmiregistry.exe
+start "" "C:\Program Files\Java\jdk-20\bin\rmiregistry.exe"
+
+
+
+//dc exp 5.1
+
+// Java program to illustrate the Lamport's
+// Logical Clock
+import java.util.*;
+public class GFG {
+
+// Function to find the maximum timestamp
+// between 2 events
+static int max1(int a, int b)
+{
+	// Return the greatest of the two
+	if (a > b)
+	return a;
+	else
+	return b;
+}
+
+// Function to display the logical timestamp
+static void display(int e1, int e2, int p1[], int p2[])
+{
+	int i;
+	System.out.print(
+	"\nThe time stamps of events in P1:\n");
+
+	for (i = 0; i < e1; i++) {
+	System.out.print(p1[i] + " ");
+	}
+
+	System.out.println(
+	"\nThe time stamps of events in P2:");
+
+	// Print the array p2[]
+	for (i = 0; i < e2; i++)
+	System.out.print(p2[i] + " ");
+}
+
+// Function to find the timestamp of events
+static void lamportLogicalClock(int e1, int e2,
+								int m[][])
+{
+	int i, j, k;
+	int p1[] = new int[e1];
+	int p2[] = new int[e2];
+	// Initialize p1[] and p2[]
+	for (i = 0; i < e1; i++)
+	p1[i] = i + 1;
+
+	for (i = 0; i < e2; i++)
+	p2[i] = i + 1;
+	for (i = 0; i < e2; i++)
+	System.out.print("\te2" + (i + 1));
+
+	for (i = 0; i < e1; i++) {
+	System.out.print("\n e1" + (i + 1) + "\t");
+	for (j = 0; j < e2; j++)
+		System.out.print(m[i][j] + "\t");
+	}
+
+	for (i = 0; i < e1; i++) {
+	for (j = 0; j < e2; j++) {
+
+		// Change the timestamp if the
+		// message is sent
+		if (m[i][j] == 1) {
+		p2[j] = max1(p2[j], p1[i] + 1);
+		for (k = j + 1; k < e2; k++)
+			p2[k] = p2[k - 1] + 1;
+		}
+
+		// Change the timestamp if the
+		// message is received
+		if (m[i][j] == -1) {
+		p1[i] = max1(p1[i], p2[j] + 1);
+		for (k = i + 1; k < e1; k++)
+			p1[k] = p1[k - 1] + 1;
+		}
+	}
+	}
+
+	// Function Call
+	display(e1, e2, p1, p2);
+}
+
+public static void main(String args[])
+{
+	int e1 = 5, e2 = 3;
+	int m[][] = new int[5][3];
+	// message is sent and received
+	// between two process
+
+	/*dep[i][j] = 1, if message is sent
+					from ei to ej
+		dep[i][j] = -1, if message is received
+						by ei from ej
+		dep[i][j] = 0, otherwise*/
+	m[0][0] = 0;
+	m[0][1] = 0;
+	m[0][2] = 0;
+	m[1][0] = 0;
+	m[1][1] = 0;
+	m[1][2] = 1;
+	m[2][0] = 0;
+	m[2][1] = 0;
+	m[2][2] = 0;
+	m[3][0] = 0;
+	m[3][1] = 0;
+	m[3][2] = 0;
+	m[4][0] = 0;
+	m[4][1] = -1;
+	m[4][2] = 0;
+
+	// Function Call
+	lamportLogicalClock(e1, e2, m);
+}
+}
+
+// This code is contributed by nmkiniqw7b
+
+
+//dc exp 5.2
+import java.util.*;
+
+public class LamportClock {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        Random rand = new Random();
+
+        int n;
+        int[] num = new int[10];
+        int[][] b = new int[10][10];
+        char[][] a = new char[10][10];
+
+        System.out.print("Enter the no. of physical clocks: ");
+        n = sc.nextInt();
+
+        for (int i = 0; i < n; i++) {
+            System.out.print("\nNo. of nodes for physical clock " + (i + 1) + ": ");
+            num[i] = sc.nextInt();
+            int x = 0;
+
+            for (int j = 0; j < num[i]; j++) {
+                System.out.print("\nEnter the name of process: ");
+                String input = sc.next();
+                a[i][j] = input.charAt(0);
+                b[i][j] = x + rand.nextInt(10);
+                x = b[i][j] + 1;
+            }
+        }
+
+        System.out.println("\n");
+
+        for (int i = 0; i < n; i++) {
+            System.out.println("Physical Clock " + (i + 1));
+            for (int j = 0; j < num[i]; j++) {
+                System.out.println("Process " + a[i][j] + " has P.T. : " + b[i][j]);
+            }
+            System.out.println();
+        }
+
+        int x = 0;
+        for (int time = 0; time < 100; time++) { // Assuming max of 100 timestamps
+            for (int j = 0; j < n; j++) {
+                for (int k = 0; k < num[j]; k++) {
+                    if (b[j][k] == time) {
+                        x = rand.nextInt(10) + x;
+                        System.out.println("Logical Clock Timestamp for process " + a[j][k] + " : " + x);
+                    }
+                }
+            }
+        }
+
+        sc.close();
+    }
+}
+
+
+//dc exp5.3
+import java.util.*;
+
+public class LamportClockSimulation {
+
+    static class Process {
+        String name;
+        int physicalTime;
+        int logicalTime;
+
+        public Process(String name, int physicalTime) {
+            this.name = name;
+            this.physicalTime = physicalTime;
+            this.logicalTime = 0;
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter the no. of physical clocks: ");
+        int numClocks = sc.nextInt();
+
+        List<List<Process>> clocks = new ArrayList<>();
+
+        for (int i = 0; i < numClocks; i++) {
+            System.out.println("\nNo. of nodes for physical clock " + (i + 1) + ": ");
+            int nodes = sc.nextInt();
+            List<Process> processes = new ArrayList<>();
+
+            for (int j = 0; j < nodes; j++) {
+                System.out.print("Enter the name of process: ");
+                String name = sc.next();
+                System.out.print("Process " + name + " has P.T.: ");
+                int pt = sc.nextInt();
+                processes.add(new Process(name, pt));
+            }
+
+            clocks.add(processes);
+        }
+
+        // Print physical timestamps
+        for (int i = 0; i < clocks.size(); i++) {
+            System.out.println("\nPhysical Clock " + (i + 1));
+            for (Process p : clocks.get(i)) {
+                System.out.println("Process " + p.name + " has P.T. : " + p.physicalTime);
+            }
+        }
+
+        // Calculate logical timestamps
+        Map<String, Integer> logicalClock = new LinkedHashMap<>();
+
+        System.out.println("\n");
+        for (List<Process> clock : clocks) {
+            int prevLogical = 0;
+            for (Process p : clock) {
+                // Lamport's formula: Logical = max(previous, physical) + 1
+                p.logicalTime = Math.max(prevLogical, p.physicalTime) + 1;
+                logicalClock.put(p.name, p.logicalTime);
+                System.out.println("Logical Clock Timestamp for process " + p.name +
+                        " = " + p.logicalTime + " (max(" + prevLogical + ", " + p.physicalTime + ") + 1)");
+                prevLogical = p.logicalTime;
+            }
+        }
+
+        sc.close();
+        return;
+    }
+}
+
+
+// DC EXP 6 RING  6.1
+
+import java.util.*;
+
+public class RingElectionFixed {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Step 1: Number of processes
+        System.out.print("Enter number of processes in the ring: ");
+        int n = sc.nextInt();
+        int[] processID = new int[n];
+        boolean[] isAlive = new boolean[n];
+
+        // Step 2: Input process IDs and mark all as alive initially
+        System.out.println("Enter the process IDs:");
+        for (int i = 0; i < n; i++) {
+            System.out.print("Process " + i + " ID: ");
+            processID[i] = sc.nextInt();
+            isAlive[i] = true;
+        }
+
+        // Step 3: Get ID of the coordinator that fails
+        System.out.print("Enter the ID of the coordinator that fails: ");
+        int failedCoordinator = sc.nextInt();
+
+        // Mark the failed process as dead
+        for (int i = 0; i < n; i++) {
+            if (processID[i] == failedCoordinator) {
+                isAlive[i] = false;
+                break;
+            }
+        }
+        System.out.println("Coordinator with ID " + failedCoordinator + " has failed.\n");
+
+        // Step 4: Random initiator (from alive processes)
+        Random rand = new Random();
+        int initiator;
+        do {
+            initiator = rand.nextInt(n);
+        } while (!isAlive[initiator]);
+
+        System.out.println("Process " + processID[initiator] + " is randomly chosen as initiator.\n");
+
+        // Step 5: Start election
+        List<Integer> electionMsg = new ArrayList<>();
+        int index = initiator;
+
+        System.out.println("--- Election Messages ---");
+        do {
+            if (isAlive[index]) {
+                electionMsg.add(processID[index]);
+                int next = (index + 1) % n;
+
+                // Skip dead processes
+                while (!isAlive[next]) {
+                    next = (next + 1) % n;
+                }
+
+                System.out.println("Process " + processID[index] + " sends: ELECTION, " + electionMsg + " to Process " + processID[next]);
+            }
+
+            index = (index + 1) % n;
+
+            // Skip dead processes
+            while (!isAlive[index]) {
+                index = (index + 1) % n;
+            }
+
+        } while (index != initiator);
+
+        // Step 6: Highest ID wins
+        int newCoordinator = Collections.max(electionMsg);
+        System.out.println("\nNew coordinator selected: " + newCoordinator);
+
+        // Step 7: Announce coordinator
+        System.out.println("\n--- Coordinator Announcement Messages ---");
+        index = initiator;
+        do {
+            if (isAlive[index]) {
+                int next = (index + 1) % n;
+
+                while (!isAlive[next]) {
+                    next = (next + 1) % n;
+                }
+
+                System.out.println("Process " + processID[index] + " sends: COORDINATOR, " + newCoordinator + " to Process " + processID[next]);
+            }
+
+            index = (index + 1) % n;
+
+            while (!isAlive[index]) {
+                index = (index + 1) % n;
+            }
+
+        } while (index != initiator);
+    }
+}
+
+ 
+// DC EXP 6 RING  6.2
+import java.util.*;
+
+public class RingElectionHandlesFailureResponse {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Step 1: Input number of processes
+        System.out.print("Enter number of processes in the ring: ");
+        int n = sc.nextInt();
+        int[] processID = new int[n];
+        boolean[] isAlive = new boolean[n];
+
+        // Step 2: Input process IDs and mark them alive
+        System.out.println("Enter the process IDs:");
+        for (int i = 0; i < n; i++) {
+            System.out.print("Process " + i + " ID: ");
+            processID[i] = sc.nextInt();
+            isAlive[i] = true;
+        }
+
+        // Step 3: Enter the ID of the coordinator (that fails)
+        System.out.print("Enter the ID of the coordinator (that fails): ");
+        int failedID = sc.nextInt();
+        int failedIndex = -1;
+        for (int i = 0; i < n; i++) {
+            if (processID[i] == failedID) {
+                isAlive[i] = false;
+                failedIndex = i;
+                break;
+            }
+        }
+        System.out.println("Coordinator with ID " + failedID + " has failed.\n");
+
+        // Step 4: Random initiator process (alive)
+        Random rand = new Random();
+        int initiator;
+        do {
+            initiator = rand.nextInt(n);
+        } while (!isAlive[initiator]);
+
+        System.out.println("Process " + processID[initiator] + " is randomly chosen as initiator.\n");
+
+        // Step 5: Election messages (with failure check and retry)
+        List<Integer> electionMsg = new ArrayList<>();
+        int current = initiator;
+
+        System.out.println("--- Election Messages ---");
+
+        do {
+            if (isAlive[current]) {
+                electionMsg.add(processID[current]);
+                int next = (current + 1) % n;
+
+                System.out.print("Process " + processID[current] + " sends to Process " + processID[next] + ": ");
+
+                if (!isAlive[next]) {
+                    System.out.println("ELECTION, " + electionMsg + " -> No response (Process " + processID[next] + " is dead)");
+                    // Retry logic to find next alive
+                    int retry = (next + 1) % n;
+                    while (!isAlive[retry]) {
+                        retry = (retry + 1) % n;
+                    }
+                    System.out.println("Process " + processID[current] + " retries and sends to Process " + processID[retry] + ": ELECTION, " + electionMsg);
+                } else {
+                    System.out.println("ELECTION, " + electionMsg);
+                }
+            }
+
+            // Move to next alive process
+            current = (current + 1) % n;
+            while (!isAlive[current]) {
+                current = (current + 1) % n;
+            }
+        } while (current != initiator);
+
+        // Step 6: Highest ID becomes new coordinator
+        int newCoordinator = Collections.max(electionMsg);
+        System.out.println("\nNew coordinator selected: " + newCoordinator);
+
+        // Step 7: Announce coordinator
+        System.out.println("\n--- Coordinator Announcement Messages ---");
+
+        current = initiator;
+        do {
+            if (isAlive[current]) {
+                int next = (current + 1) % n;
+
+                if (!isAlive[next]) {
+                    System.out.println("Process " + processID[current] + " sends to Process " + processID[next] + ": COORDINATOR, " + newCoordinator + " -> No response");
+                    int retry = (next + 1) % n;
+                    while (!isAlive[retry]) {
+                        retry = (retry + 1) % n;
+                    }
+                    System.out.println("Process " + processID[current] + " retries and sends to Process " + processID[retry] + ": COORDINATOR, " + newCoordinator);
+                } else {
+                    System.out.println("Process " + processID[current] + " sends to Process " + processID[next] + ": COORDINATOR, " + newCoordinator);
+                }
+            }
+
+            current = (current + 1) % n;
+            while (!isAlive[current]) {
+                current = (current + 1) % n;
+            }
+
+        } while (current != initiator);
+    }
+}
+
+
+//dc exp 6.3
+import java.util.*;
+
+public class RingElectionSkipFailed {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Step 1: Input number of processes
+        System.out.print("Enter number of processes in the ring: ");
+        int n = sc.nextInt();
+        int[] processID = new int[n];
+        boolean[] isAlive = new boolean[n];
+
+        // Step 2: Input process IDs and mark them alive
+        System.out.println("Enter the process IDs:");
+        for (int i = 0; i < n; i++) {
+            System.out.print("Process " + i + " ID: ");
+            processID[i] = sc.nextInt();
+            isAlive[i] = true;
+        }
+
+        // Step 3: Enter the ID of the failed coordinator
+        System.out.print("Enter the ID of the coordinator (that fails): ");
+        int failedID = sc.nextInt();
+        int failedIndex = -1;
+        for (int i = 0; i < n; i++) {
+            if (processID[i] == failedID) {
+                isAlive[i] = false;
+                failedIndex = i;
+                break;
+            }
+        }
+        System.out.println("Coordinator with ID " + failedID + " has failed.\n");
+
+        // Step 4: User selects initiator
+        int initiatorIndex;
+        while (true) {
+            System.out.print("Enter the index (0 to " + (n - 1) + ") of the initiator process: ");
+            initiatorIndex = sc.nextInt();
+            if (initiatorIndex >= 0 && initiatorIndex < n && isAlive[initiatorIndex]) {
+                break;
+            }
+            System.out.println("Invalid initiator (either out of range or dead), please try again.");
+        }
+
+        System.out.println("\n--- Election Messages ---");
+
+        // Step 5: Election phase
+        List<Integer> electionIDs = new ArrayList<>();
+        int current = initiatorIndex;
+
+        do {
+            if (isAlive[current]) {
+                electionIDs.add(processID[current]);
+                int next = (current + 1) % n;
+
+                // Find next alive process
+                while (!isAlive[next]) {
+                    next = (next + 1) % n;
+                }
+
+                System.out.println("Process " + processID[current] + " sends to Process " + processID[next] +
+                        ": ELECTION, " + electionIDs);
+            }
+
+            current = (current + 1) % n;
+            while (!isAlive[current]) {
+                current = (current + 1) % n;
+            }
+
+        } while (current != initiatorIndex);
+
+        // Step 6: Determine new coordinator
+        int newCoordinator = Collections.max(electionIDs);
+        System.out.println("\nNew coordinator selected: " + newCoordinator);
+
+        // Step 7: Coordinator announcement phase
+        System.out.println("\n--- Coordinator Announcement Messages ---");
+
+        current = initiatorIndex;
+
+        do {
+            if (isAlive[current]) {
+                int next = (current + 1) % n;
+
+                // Find next alive process
+                while (!isAlive[next]) {
+                    next = (next + 1) % n;
+                }
+
+                System.out.println("Process " + processID[current] + " sends to Process " + processID[next] +
+                        ": COORDINATOR, " + newCoordinator);
+            }
+
+            current = (current + 1) % n;
+            while (!isAlive[current]) {
+                current = (current + 1) % n;
+            }
+
+        } while (current != initiatorIndex);
+    }
+}
+
+// dc exp 6.4
+import java.util.Scanner;
+
+public class GFG {
+
+	class Pro {
+		int id;
+		boolean act;
+		Pro(int id)
+		{
+			this.id = id;
+			act = true;
+		}
+	}
+	int TotalProcess;
+	Pro[] process;
+	public GFG() { }
+	public void initialiseGFG()
+	{
+		System.out.println("No of processes 5");
+		TotalProcess = 5;
+		process = new Pro[TotalProcess];
+		int i = 0;
+		while (i < process.length) {
+			process[i] = new Pro(i);
+			i++;
+		}
+	}
+	public void Election()
+	{
+		System.out.println("Process no "
+						+ process[FetchMaximum()].id
+						+ " fails");
+		process[FetchMaximum()].act = false;
+		System.out.println("Election Initiated by 2");
+		int initializedProcess = 2;
+
+		int old = initializedProcess;
+		int newer = old + 1;
+
+		while (true) {
+			if (process[newer].act) {
+				System.out.println(
+					"Process " + process[old].id
+					+ " pass Election(" + process[old].id
+					+ ") to" + process[newer].id);
+				old = newer;
+			}
+
+			newer = (newer + 1) % TotalProcess;
+			if (newer == initializedProcess) {
+				break;
+			}
+		}
+
+		System.out.println("Process "
+						+ process[FetchMaximum()].id
+						+ " becomes coordinator");
+		int coord = process[FetchMaximum()].id;
+
+		old = coord;
+		newer = (old + 1) % TotalProcess;
+
+		while (true) {
+
+			if (process[newer].act) {
+				System.out.println(
+					"Process " + process[old].id
+					+ " pass Coordinator(" + coord
+					+ ") message to process "
+					+ process[newer].id);
+				old = newer;
+			}
+			newer = (newer + 1) % TotalProcess;
+			if (newer == coord) {
+				System.out.println("End Of Election ");
+				break;
+			}
+		}
+	}
+	public int FetchMaximum()
+	{
+		int Ind = 0;
+		int maxId = -9999;
+		int i = 0;
+		while (i < process.length) {
+			if (process[i].act && process[i].id > maxId) {
+				maxId = process[i].id;
+				Ind = i;
+			}
+			i++;
+		}
+		return Ind;
+	}
+
+	public static void main(String arg[])
+	{
+		GFG object = new GFG();
+		object.initialiseGFG();
+		object.Election();
+	}
+}
+
+
+//Bully Algorithm 
+//6.1.1
+
+import java.util.*;
+
+public class BullyAlgorithm {
+
+    static class Process {
+        int id;
+        boolean isAlive;
+
+        Process(int id) {
+            this.id = id;
+            this.isAlive = true;
+        }
+    }
+
+    static List<Process> processes = new ArrayList<>();
+    static int n;
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Step 1: Input number of processes
+        System.out.print("Enter the number of processes: ");
+        n = sc.nextInt();
+
+        for (int i = 0; i < n; i++) {
+            processes.add(new Process(i));
+        }
+
+        // Step 2: Ask for failed coordinator
+        System.out.print("Enter the ID of the initial coordinator (FAILED): ");
+        int failedID = sc.nextInt();
+        if (failedID >= 0 && failedID < n) {
+            processes.get(failedID).isAlive = false;
+        }
+
+        // Step 3: Ask for initiator
+        int initiatorID;
+        while (true) {
+            System.out.print("Enter the ID of the initiator process: ");
+            initiatorID = sc.nextInt();
+            if (initiatorID >= 0 && initiatorID < n && processes.get(initiatorID).isAlive) {
+                break;
+            } else {
+                System.out.println("Invalid initiator! Must be an alive process.");
+            }
+        }
+
+        // Step 4: Start election
+        System.out.println("\n--- Election Started by Process " + initiatorID + " ---");
+        runElection(initiatorID);
+    }
+
+    static void runElection(int initiatorID) {
+        boolean higherAlive = false;
+
+        for (int i = initiatorID + 1; i < n; i++) {
+            System.out.println("Process " + initiatorID + " sends message to Process " + i + ": ELECTION");
+            if (processes.get(i).isAlive) {
+                System.out.println("Process " + i + " replies to Process " + initiatorID + ": OK");
+                higherAlive = true;
+            } else {
+                System.out.println("Process " + i + " is not responding (FAILED or DOWN)");
+            }
+        }
+
+        if (!higherAlive) {
+            System.out.println("\nNo higher process responded to Process " + initiatorID + ".");
+            declareCoordinator(initiatorID);
+        } else {
+            for (int i = n - 1; i > initiatorID; i--) {
+                if (processes.get(i).isAlive) {
+                    System.out.println("\n--- Election Started by Process " + i + " ---");
+                    runElection(i); // Delegate election to next higher process
+                    return;
+                }
+            }
+        }
+    }
+
+    static void declareCoordinator(int coordinatorID) {
+        System.out.println("\nProcess " + coordinatorID + " becomes COORDINATOR");
+        for (Process p : processes) {
+            if (p.isAlive && p.id != coordinatorID) {
+                System.out.println("Coordinator message sent from Process " + coordinatorID + " to Process " + p.id);
+            }
+        }
+    }
+}
+
+
+//6.1.2
+
+import java.util.*;
+
+class Process {
+    int id;
+    boolean isAlive;
+
+    public Process(int id) {
+        this.id = id;
+        this.isAlive = true;
+    }
+}
+
+public class BullyAlgorithm {
+    static List<Process> processes = new ArrayList<>();
+    static int n;
+    static boolean electionInProgress = false;
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Step 1: Input number of processes
+        System.out.print("Enter the number of processes: ");
+        n = sc.nextInt();
+
+        // Step 2: Initialize processes
+        for (int i = 0; i < n; i++) {
+            processes.add(new Process(i));
+        }
+
+        // Step 3: Input initial coordinator and mark it
+        System.out.print("Enter the ID of the initial coordinator: ");
+        int initialCoordinator = sc.nextInt();
+
+        // Step 4: Randomly select initiator
+        Random rand = new Random();
+        int initiator;
+        do {
+            initiator = rand.nextInt(n);
+        } while (initiator == initialCoordinator); // Ensure initiator isn't the coordinator
+
+        System.out.println("\nRandomly selected initiator: Process " + initiator);
+
+        // Step 5: Simulate message to coordinator
+        System.out.println("Process " + initiator + " sends message to Coordinator (Process " + initialCoordinator + ")");
+        System.out.println("Waiting for Coordinator to respond...");
+
+        try {
+            Thread.sleep(3000); // Simulate timeout (3 seconds)
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Step 6: Coordinator fails
+        System.out.println("No response from Coordinator (Process " + initialCoordinator + ")");
+        processes.get(initialCoordinator).isAlive = false;
+        System.out.println("Coordinator (Process " + initialCoordinator + ") is assumed to have FAILED.\n");
+
+        System.out.println("--- Election Started by Process " + initiator + " ---");
+        runElection(initiator);
+    }
+
+    static void runElection(int initiatorID) {
+        boolean higherAlive = false;
+
+        // Send election messages to higher processes
+        for (int i = initiatorID + 1; i < n; i++) {
+            System.out.println("Process " + initiatorID + " sends message to Process " + i + ": ELECTION");
+            if (processes.get(i).isAlive) {
+                System.out.println("Process " + i + " replies to Process " + initiatorID + ": OK");
+                higherAlive = true;
+            } else {
+                System.out.println("Process " + i + " is not responding (FAILED or DOWN)");
+            }
+        }
+
+        if (higherAlive) {
+            // If any higher process is alive, that process will take over the election
+            for (int i = initiatorID + 1; i < n; i++) {
+                if (processes.get(i).isAlive) {
+                    System.out.println("\n--- Election Started by Process " + i + " ---");
+                    runElection(i); // Start election with higher process
+                    return; // Exit from the current election since the higher process takes over
+                }
+            }
+        } else {
+            // No higher process responded, so this process becomes the coordinator
+            System.out.println("\nNo higher process responded to Process " + initiatorID + ".");
+            declareCoordinator(initiatorID);
+        }
+    }
+
+    static void declareCoordinator(int coordinatorID) {
+        System.out.println("\nProcess " + coordinatorID + " becomes COORDINATOR");
+
+        // Inform all processes about the new coordinator
+        for (int i = 0; i < n; i++) {
+            if (i != coordinatorID && processes.get(i).isAlive) {
+                System.out.println("Coordinator message sent from Process " + coordinatorID + " to Process " + i);
+            }
+        }
+    }
+}
+
+
+// dc exp  7
+
+import java.util.*;
+
+public class RicartAgrawala {
+    static class Site implements Comparable<Site> {
+        int id;
+        int timestamp;
+        boolean hasExecuted = false;
+
+        Site(int id, int timestamp) {
+            this.id = id;
+            this.timestamp = timestamp;
+        }
+
+        @Override
+        public int compareTo(Site other) {
+            return Integer.compare(this.timestamp, other.timestamp);
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter number of sites: ");
+        int n = sc.nextInt();
+
+        Site[] sites = new Site[n];
+
+        System.out.println("Enter timestamps for each site:");
+        for (int i = 0; i < n; i++) {
+            System.out.print("Timestamp for Site " + i + ": ");
+            int timestamp = sc.nextInt();
+            sites[i] = new Site(i, timestamp);
+        }
+
+        Arrays.sort(sites); // Sort by timestamp to follow Ricart-Agrawala order
+
+        System.out.println("\n---- Execution Begins ----\n");
+
+        for (int i = 0; i < n; i++) {
+            Site current = sites[i];
+
+            System.out.println("Site " + current.id + " is requesting the critical section with timestamp " + current.timestamp);
+            for (int j = 0; j < n; j++) {
+                if (i != j) {
+                    System.out.println("Site " + current.id + " sends REQUEST to Site " + sites[j].id);
+                    System.out.println("Site " + sites[j].id + " sends REPLY to Site " + current.id);
+                }
+            }
+            System.out.println("Site " + current.id + " has entered the critical section.");
+            System.out.println("Site " + current.id + " is leaving the critical section.\n");
+        }
+
+        System.out.println("---- Execution Completed ----");
+        sc.close();
+    }
+}
+
+
+//dc exp 7.2
+
+import java.util.*;
+
+public class RicartAgrawala {
+    static class Site implements Comparable<Site> {
+        int id;
+        int timestamp;
+        boolean hasExecuted = false;
+
+        Site(int id, int timestamp) {
+            this.id = id;
+            this.timestamp = timestamp;
+        }
+
+        @Override
+        public int compareTo(Site other) {
+            return Integer.compare(this.timestamp, other.timestamp);
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter number of sites: ");
+        int n = sc.nextInt();
+
+        Site[] sites = new Site[n];
+
+        System.out.println("Enter timestamps for each site:");
+        for (int i = 0; i < n; i++) {
+            System.out.print("Timestamp for Site " + i + ": ");
+            int timestamp = sc.nextInt();
+            sites[i] = new Site(i, timestamp);
+        }
+
+        Arrays.sort(sites); // Sort by timestamp to follow Ricart-Agrawala order
+
+        System.out.println("\n---- Execution Begins ----\n");
+
+        for (int i = 0; i < n; i++) {
+            Site current = sites[i];
+
+            System.out.println("Site " + current.id + " is requesting the critical section with timestamp " + current.timestamp);
+            for (int j = 0; j < n; j++) {
+                if (i != j) {
+                    System.out.println("Site " + current.id + " sends REQUEST to Site " + sites[j].id);
+                    System.out.println("Site " + sites[j].id + " sends REPLY to Site " + current.id);
+                }
+            }
+            System.out.println("Site " + current.id + " has entered the critical section.");
+            System.out.println("Site " + current.id + " is leaving the critical section.\n");
+        }
+
+        System.out.println("---- Execution Completed ----");
+        sc.close();
+    }
+}
+
+
+
+// dc exp 7. 3
+import java.util.*;
+
+public class RicartAgrawala {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Input: Number of Sites
+        System.out.print("Enter number of sites: ");
+        int ns = sc.nextInt();
+
+        // Input: Number of Sites requesting Critical Section
+        System.out.print("Enter number of sites which want to enter critical section: ");
+        int ncs = sc.nextInt();
+
+        int[] ts = new int[ns];
+        List<Integer> request = new ArrayList<>();
+        TreeMap<Integer, Integer> mp = new TreeMap<>();
+
+        // Input Timestamps and Site Numbers
+        for (int i = 0; i < ncs; i++) {
+            System.out.print("\nEnter timestamp: ");
+            int timestamp = sc.nextInt();
+            System.out.print("Enter site number: ");
+            int site = sc.nextInt();
+
+            ts[site - 1] = timestamp;
+            request.add(site);
+            mp.put(timestamp, site);
+        }
+
+        // Display Sites and Timestamps
+        System.out.println("\nSites and Timestamps:");
+        for (int i = 0; i < ts.length; i++) {
+            System.out.println((i + 1) + " " + ts[i]);
+        }
+
+        // Handling Requests
+        for (int i = 0; i < request.size(); i++) {
+            int reqSite = request.get(i);
+            System.out.println("\n--- Request from site " + reqSite + " ---");
+
+            for (int j = 0; j < ts.length; j++) {
+                if (reqSite != (j + 1)) {
+                    if (ts[j] > ts[reqSite - 1] || ts[j] == 0)
+                        System.out.println("Site " + (j + 1) + " Replied to Site " + reqSite);
+                    else
+                        System.out.println("Site " + (j + 1) + " Deferred for Site " + reqSite);
+                }
+            }
+        }
+
+        // Display Critical Section Entries
+        System.out.println("\n--- Critical Section Execution ---");
+        for (Map.Entry<Integer, Integer> entry : mp.entrySet()) {
+            System.out.println("Site " + entry.getValue() + " entered Critical Section");
+        }
+
+        sc.close();
+    }
+}
+
+
+// dc exp 7.4
+import java.util.*;
+
+public class RicartAgrawala {
+    static class Site implements Comparable<Site> {
+        int id;
+        int timestamp;
+        boolean hasExecuted = false;
+
+        Site(int id, int timestamp) {
+            this.id = id;
+            this.timestamp = timestamp;
+        }
+
+        @Override
+        public int compareTo(Site other) {
+            return Integer.compare(this.timestamp, other.timestamp);
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter number of sites: ");
+        int n = sc.nextInt();
+
+        Site[] sites = new Site[n];
+
+        System.out.println("Enter timestamps for each site:");
+        for (int i = 0; i < n; i++) {
+            System.out.print("Timestamp for Site " + i + ": ");
+            int timestamp = sc.nextInt();
+            sites[i] = new Site(i, timestamp);
+        }
+
+        Arrays.sort(sites); // Sort by timestamp to follow Ricart-Agrawala order
+
+        System.out.println("\n---- Execution Begins ----\n");
+
+        for (int i = 0; i < n; i++) {
+            Site current = sites[i];
+
+            System.out.println("Site " + current.id + " is requesting the critical section with timestamp " + current.timestamp);
+            for (int j = 0; j < n; j++) {
+                if (i != j) {
+                    System.out.println("Site " + current.id + " sends REQUEST to Site " + sites[j].id);
+                    System.out.println("Site " + sites[j].id + " sends REPLY to Site " + current.id);
+                }
+            }
+            System.out.println("Site " + current.id + " has entered the critical section.");
+            System.out.println("Site " + current.id + " is leaving the critical section.\n");
+        }
+
+        System.out.println("---- Execution Completed ----");
+        sc.close();
+    }
+}
+
+
+
+// dc exp 8
+
+import java.util.*;
+
+class Server {
+    String serverName;
+    int processorCount;
+
+    public Server(String serverName, int processorCount) {
+        this.serverName = serverName;
+        this.processorCount = processorCount;
+    }
+}
+
+public class LoadBalancing {
+    static Map<String, Server> servers = new HashMap<>();
+
+    // Add a new server
+    public static void addServer(String serverName, int processorCount) {
+        if (!servers.containsKey(serverName)) {
+            servers.put(serverName, new Server(serverName, processorCount));
+            System.out.println("Server " + serverName + " added with " + processorCount + " processors.");
+        } else {
+            System.out.println("Server " + serverName + " already exists.");
+        }
+    }
+
+    // Remove an existing server
+    public static void removeServer(String serverName) {
+        if (servers.containsKey(serverName)) {
+            servers.remove(serverName);
+            System.out.println("Server " + serverName + " removed.");
+        } else {
+            System.out.println("Server " + serverName + " not found.");
+        }
+    }
+
+    // Add processors to an existing server
+    public static void addProcessor(String serverName, int processors) {
+        if (servers.containsKey(serverName)) {
+            Server server = servers.get(serverName);
+            server.processorCount += processors;
+            System.out.println(processors + " processors added to server " + serverName + ". Total processors: " + server.processorCount);
+        } else {
+            System.out.println("Server " + serverName + " not found.");
+        }
+    }
+
+    // Remove processors from an existing server
+    public static void removeProcessor(String serverName, int processors) {
+        if (servers.containsKey(serverName)) {
+            Server server = servers.get(serverName);
+            if (server.processorCount >= processors) {
+                server.processorCount -= processors;
+                System.out.println(processors + " processors removed from server " + serverName + ". Total processors: " + server.processorCount);
+            } else {
+                System.out.println("Not enough processors to remove from server " + serverName);
+            }
+        } else {
+            System.out.println("Server " + serverName + " not found.");
+        }
+    }
+
+    // Display all servers and processors
+    public static void displayServers() {
+        if (servers.isEmpty()) {
+            System.out.println("No servers available.");
+        } else {
+            System.out.println("Current Servers:");
+            for (Server server : servers.values()) {
+                System.out.println("Server: " + server.serverName + ", Processors: " + server.processorCount);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        int choice;
+
+        while (true) {
+            System.out.println("\nLoad Balancing System");
+            System.out.println("1. Add Server");
+            System.out.println("2. Remove Server");
+            System.out.println("3. Add Processor");
+            System.out.println("4. Remove Processor");
+            System.out.println("5. Display Servers");
+            System.out.println("6. Exit");
+            System.out.print("Enter your choice: ");
+            choice = scanner.nextInt();
+            scanner.nextLine();  // Consume the newline character
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter server name: ");
+                    String serverName = scanner.nextLine();
+                    System.out.print("Enter number of processors: ");
+                    int processors = scanner.nextInt();
+                    addServer(serverName, processors);
+                    break;
+                case 2:
+                    System.out.print("Enter server name to remove: ");
+                    serverName = scanner.nextLine();
+                    removeServer(serverName);
+                    break;
+                case 3:
+                    System.out.print("Enter server name: ");
+                    serverName = scanner.nextLine();
+                    System.out.print("Enter number of processors to add: ");
+                    processors = scanner.nextInt();
+                    addProcessor(serverName, processors);
+                    break;
+                case 4:
+                    System.out.print("Enter server name: ");
+                    serverName = scanner.nextLine();
+                    System.out.print("Enter number of processors to remove: ");
+                    processors = scanner.nextInt();
+                    removeProcessor(serverName, processors);
+                    break;
+                case 5:
+                    displayServers();
+                    break;
+                case 6:
+                    System.out.println("Exiting the program...");
+                    scanner.close();
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+}
+
+
+// dc exp 9
+
+// SharedMemoryServer.java
+import java.io.*;
+import java.net.*;
+
+public class SharedMemoryServer {
+    private static int sharedVariable = 50; // Initial shared value
+
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(5000)) {
+            System.out.println("SharedMemoryServer started on port 5000...");
+            
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connected: " + clientSocket.getInetAddress());
+                new ClientHandler(clientSocket).start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static class ClientHandler extends Thread {
+        private Socket clientSocket;
+
+        public ClientHandler(Socket socket) {
+            this.clientSocket = socket;
+        }
+
+        public void run() {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+                
+                out.println("Connected to SharedMemoryServer. Type 'exit' to quit.");
+                
+                String command;
+                while ((command = in.readLine()) != null) {
+                    if (command.equals("get")) {
+                        out.println("Accessed Shared Variable: " + sharedVariable);
+                    } else if (command.startsWith("set")) {
+                        try {
+                            int newValue = Integer.parseInt(command.split(" ")[1]);
+                            sharedVariable = newValue;
+                            out.println("Updated Shared Variable: " + sharedVariable);
+                        } catch (Exception e) {
+                            out.println("Invalid value. Use: set <integer>");
+                        }
+                    } else if (command.equals("exit")) {
+                        out.println("Disconnecting...");
+                        break;
+                    } else {
+                        out.println("Invalid Command");
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    clientSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+
+//SharedMemoryClient1.java
+
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class SharedMemoryClient1 {
+    public static void main(String[] args) {
+        interactWithServer();
+    }
+    private static void interactWithServer() {
+        try (Socket socket = new Socket("localhost", 5000);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             Scanner scanner = new Scanner(System.in)) {
+            
+            System.out.println(in.readLine());
+            
+            String command;
+            while (true) {
+                System.out.print("Client 1 - Enter Command (get/set/exit): ");
+                command = scanner.nextLine();
+                
+                out.println(command);
+                
+                if (command.equals("exit")) {
+                    System.out.println(in.readLine());
+                    break;
+                }
+                
+                System.out.println(in.readLine());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+//SharedMemoryClient2.java
+
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class SharedMemoryClient2 {
+    public static void main(String[] args) {
+        interactWithServer();
+    }
+    private static void interactWithServer() {
+        try (Socket socket = new Socket("localhost", 5000);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             Scanner scanner = new Scanner(System.in)) {
+            
+            System.out.println(in.readLine());
+            
+            String command;
+            while (true) {
+                System.out.print("Client 2 - Enter Command (get/set/exit): ");
+                command = scanner.nextLine();
+                
+                out.println(command);
+                
+                if (command.equals("exit")) {
+                    System.out.println(in.readLine());
+                    break;
+                }
+                
+                System.out.println(in.readLine());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+// SharedMemoryClient3.java
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class SharedMemoryClient3 {
+    public static void main(String[] args) {
+        interactWithServer();
+    }
+    private static void interactWithServer() {
+        try (Socket socket = new Socket("localhost", 5000);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             Scanner scanner = new Scanner(System.in)) {
+            
+            System.out.println(in.readLine());
+            
+            String command;
+            while (true) {
+                System.out.print("Client 3 - Enter Command (get/set/exit): ");
+                command = scanner.nextLine();
+                
+                out.println(command);
+                
+                if (command.equals("exit")) {
+                    System.out.println(in.readLine());
+                    break;
+                }
+                
+                System.out.println(in.readLine());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+DC EXP 4 
+
+UNICAST 
+
+UnicastServer.java
+
+// Server Code
+import java.io.*;
+import java.net.*;
+
+public class UnicastServer {
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(12345)) {
+            System.out.println("Server is running... Waiting for client...");
+            Socket clientSocket = serverSocket.accept();
+            System.out.println("Client connected!");
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter output = new PrintWriter(clientSocket.getOutputStream(), true);
+            BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
+
+            String clientMessage, serverMessage;
+            while (true) {
+                clientMessage = input.readLine();
+                if (clientMessage.equalsIgnoreCase("exit")) break;
+                System.out.println("Client: " + clientMessage);
+
+                System.out.print("Server: ");
+                serverMessage = consoleInput.readLine();
+                output.println(serverMessage);
+                if (serverMessage.equalsIgnoreCase("exit")) break;
+            }
+
+            clientSocket.close();
+            System.out.println("Connection closed.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+// UnicastClient.java
+// Client Code
+import java.io.*;
+import java.net.*;
+
+public class UnicastClient {
+    public static void main(String[] args) {
+        try (Socket socket = new Socket("localhost", 12345)) {
+            System.out.println("Connected to server...");
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
+
+            String clientMessage, serverMessage;
+            while (true) {
+                System.out.print("Client: ");
+                clientMessage = consoleInput.readLine();
+                output.println(clientMessage);
+                if (clientMessage.equalsIgnoreCase("exit")) break;
+
+                serverMessage = input.readLine();
+                if (serverMessage.equalsIgnoreCase("exit")) break;
+                System.out.println("Server: " + serverMessage);
+            }
+
+            System.out.println("Connection closed.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+MULTICAST 
+
+Sender.java
+
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class Sender1 {
+    public static void main(String[] args) {
+        try (Socket socket = new Socket("localhost", 12345);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             Scanner sc = new Scanner(System.in)) {
+
+            out.println("Sender 1");  // Identify as Sender 1
+            System.out.println("Sender 1 started. Type your messages:");
+
+            while (true) {
+                String message = sc.nextLine();
+                out.println(message);
+
+                if (message.equalsIgnoreCase("exit")) {
+                    System.out.println("Sender 1 disconnected.");
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+Receiver1.java
+
+// Receiver 1 Code
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class Receiver1 {
+    public static void main(String[] args) {
+        try (Socket socket = new Socket("localhost", 12345)) {
+            System.out.println("Connected to Sender as Receiver 1");
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+            Scanner scanner = new Scanner(System.in);
+
+            while (true) {
+                String message = input.readLine();
+                System.out.println(message);
+
+                System.out.print("Reply to Sender: ");
+                String reply = scanner.nextLine();
+                output.println(reply);
+
+                if (reply.equalsIgnoreCase("exit")) break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+Receiver2.java
+
+// Receiver 2 Code
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class Receiver2 {
+    public static void main(String[] args) {
+        try (Socket socket = new Socket("localhost", 12345)) {
+            System.out.println("Connected to Sender as Receiver 2");
+
+            BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+            Scanner scanner = new Scanner(System.in);
+
+            while (true) {
+                String message = input.readLine();
+                System.out.println(message);
+
+                System.out.print("Reply to Sender: ");
+                String reply = scanner.nextLine();
+                output.println(reply);
+
+                if (reply.equalsIgnoreCase("exit")) break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+//MulticastSender.java
+
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.util.Scanner;
+
+public class MulticastSender {
+    public static void main(String[] args) throws Exception {
+        InetAddress group = InetAddress.getByName("230.0.0.1");
+        int port = 4446;
+        MulticastSocket socket = new MulticastSocket();
+
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Sender started. Type messages to send (type 'exit' to stop):");
+
+        while (true) {
+            System.out.print("Enter message: ");
+            String message = scanner.nextLine();
+
+            byte[] buffer = message.getBytes();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, port);
+            socket.send(packet);
+
+            if (message.equalsIgnoreCase("exit")) break;
+        }
+
+        socket.close();
+        scanner.close();
+        System.out.println("Sender stopped.");
+    }
+}
+
+
+// ReceiverOne.java
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+
+public class ReceiverOne {
+    public static void main(String[] args) throws Exception {
+        int port = 4446;
+        InetAddress group = InetAddress.getByName("230.0.0.1");
+        MulticastSocket socket = new MulticastSocket(port);
+        socket.joinGroup(group);
+
+        System.out.println("ReceiverOne joined the group. Waiting for messages...");
+
+        while (true) {
+            byte[] buffer = new byte[256];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            socket.receive(packet);
+            String msg = new String(packet.getData(), 0, packet.getLength());
+            System.out.println("ReceiverOne received: " + msg);
+
+            if (msg.equalsIgnoreCase("exit")) break;
+        }
+
+        socket.leaveGroup(group);
+        socket.close();
+        System.out.println("ReceiverOne exited.");
+    }
+}
+
+
+
+//ReceiverTwo.java
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+
+public class ReceiverTwo {
+    public static void main(String[] args) throws Exception {
+        int port = 4446;
+        InetAddress group = InetAddress.getByName("230.0.0.1");
+        MulticastSocket socket = new MulticastSocket(port);
+        socket.joinGroup(group);
+
+        System.out.println("ReceiverTwo joined the group. Waiting for messages...");
+
+        while (true) {
+            byte[] buffer = new byte[256];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            socket.receive(packet);
+            String msg = new String(packet.getData(), 0, packet.getLength());
+            System.out.println("ReceiverTwo received: " + msg);
+
+            if (msg.equalsIgnoreCase("exit")) break;
+        }
+
+        socket.leaveGroup(group);
+        socket.close();
+        System.out.println("ReceiverTwo exited.");
+    }
+}
+
+
+//ReceiverThree.java
+
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+
+public class ReceiverThree {
+    public static void main(String[] args) throws Exception {
+        int port = 4446;
+        InetAddress group = InetAddress.getByName("230.0.0.1");
+        MulticastSocket socket = new MulticastSocket(port);
+        socket.joinGroup(group);
+
+        System.out.println("ReceiverThree joined the group. Waiting for messages...");
+
+        while (true) {
+            byte[] buffer = new byte[256];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            socket.receive(packet);
+            String msg = new String(packet.getData(), 0, packet.getLength());
+            System.out.println("ReceiverThree received: " + msg);
+
+            if (msg.equalsIgnoreCase("exit")) break;
+        }
+
+        socket.leaveGroup(group);
+        socket.close();
+        System.out.println("ReceiverThree exited.");
+    }
+}
+
+
+
+// Broadcasrt
+// BroadcastSender.java
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class BroadcastSender {
+    public static void main(String[] args) {
+        try (DatagramSocket socket = new DatagramSocket()) {
+            InetAddress group = InetAddress.getByName("230.0.0.0"); // Multicast address
+            Scanner sc = new Scanner(System.in);
+
+            System.out.println("Broadcast Sender started. Type your message (type 'exit' to quit):");
+
+            while (true) {
+                String message = sc.nextLine();
+                byte[] buffer = message.getBytes();
+
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, 12345);
+                socket.send(packet);
+
+                if (message.equalsIgnoreCase("exit")) {
+                    System.out.println("Broadcast ended.");
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+//braosdcastReceiver1.java
+
+import java.io.*;
+import java.net.*;
+
+public class BroadcastReceiver1 {
+    public static void main(String[] args) {
+        try (MulticastSocket socket = new MulticastSocket(12345)) {
+            InetAddress group = InetAddress.getByName("230.0.0.0");
+            socket.joinGroup(group);
+
+            System.out.println("Receiver 1 is ready...");
+
+            byte[] buffer = new byte[256];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+            while (true) {
+                socket.receive(packet);
+                String message = new String(packet.getData(), 0, packet.getLength());
+                System.out.println("Receiver 1 received: " + message);
+
+                if (message.equalsIgnoreCase("exit")) {
+                    System.out.println("Receiver 1 exiting...");
+                    break;
+                }
+            }
+            socket.leaveGroup(group);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+//broadcastReceiver2.jabva
+
+import java.io.*;
+import java.net.*;
+
+public class BroadcastReceiver2 {
+    public static void main(String[] args) {
+        try (MulticastSocket socket = new MulticastSocket(12345)) {
+            InetAddress group = InetAddress.getByName("230.0.0.0");
+            socket.joinGroup(group);
+
+            System.out.println("Receiver 2 is ready...");
+
+            byte[] buffer = new byte[256];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+            while (true) {
+                socket.receive(packet);
+                String message = new String(packet.getData(), 0, packet.getLength());
+                System.out.println("Receiver 2 received: " + message);
+
+                if (message.equalsIgnoreCase("exit")) {
+                    System.out.println("Receiver 2 exiting...");
+                    break;
+                }
+            }
+            socket.leaveGroup(group);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+//broadcast1sender
+
+import java.net.*;
+import java.io.*;
+
+public class BroadcastSender {
+    public static void main(String[] args) throws IOException {
+        DatagramSocket socket = new DatagramSocket();
+        socket.setBroadcast(true);
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+        while (true) {
+            System.out.print("Enter message to broadcast: ");
+            String message = reader.readLine();
+
+            if (message.equalsIgnoreCase("exit")) break;
+
+            byte[] buffer = message.getBytes();
+
+            // Broadcast to 255.255.255.255 on port 8888
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length,
+                    InetAddress.getByName("255.255.255.255"), 8888);
+            socket.send(packet);
+
+            System.out.println("Message broadcasted.\n");
+        }
+
+        socket.close();
+    }
+}
+
+
+
+//broadcast receiver 1
+
+import java.net.*;
+
+public class BroadcastReceiver {
+    public static void main(String[] args) throws Exception {
+        DatagramSocket socket = new DatagramSocket(8888, InetAddress.getByName("0.0.0.0"));
+        socket.setBroadcast(true);
+
+        System.out.println("Receiver started...");
+
+        while (true) {
+            byte[] buffer = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+            socket.receive(packet);
+            String message = new String(packet.getData(), 0, packet.getLength());
+
+            System.out.println("Received from " + packet.getAddress().getHostAddress() + ": " + message);
+        }
+    }
+}
+
+
+
+//many to one 
+import java.net.*;
+
+public class UDPReceiver {
+    public static void main(String[] args) throws Exception {
+        DatagramSocket socket = new DatagramSocket(9999);
+        byte[] buffer = new byte[1024];
+
+        System.out.println("Receiver started. Waiting for messages from multiple senders...");
+
+        while (true) {
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            socket.receive(packet);
+
+            String msg = new String(packet.getData(), 0, packet.getLength());
+            String senderIP = packet.getAddress().getHostAddress();
+            int senderPort = packet.getPort();
+
+            System.out.println("Received from " + senderIP + ":" + senderPort + " -> " + msg);
+        }
+    }
+}
+
+
+
+
+import java.net.*;
+import java.io.*;
+
+public class UDPSender1 {
+    public static void main(String[] args) throws Exception {
+        DatagramSocket socket = new DatagramSocket();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+        InetAddress receiverAddress = InetAddress.getByName("127.0.0.1"); // Receiver on localhost
+        int receiverPort = 9999;
+
+        System.out.println("Sender started. Type messages to send. Type 'exit' to stop.");
+
+        while (true) {
+            System.out.print("Enter message: ");
+            String msg = reader.readLine();
+
+            if (msg.equalsIgnoreCase("exit")) break;
+
+            byte[] buffer = msg.getBytes();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, receiverAddress, receiverPort);
+            socket.send(packet);
+        }
+
+        socket.close();
+    }
+}
+
+
+
+
+dc_exp _ 1
+
+// clinet server same machine 
+
+import java.io.*;
+import java.net.*;
+
+class MyServer{
+
+public static void main(String args[]) throws Exception {
+ServerSocket ss = new ServerSocket(3333);
+Socket s = ss.accept();
+DataInputStream din = new DataInputStream(s.getInputStream());
+DataOutputStream dout = new DataOutputStream(s.getOutputStream());
+BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+String str = " " , str2 = " " ;
+
+while(! str.equals("stop")) {
+str = din.readUTF();
+System.out.println("Client Says:" + str);
+
+if(str.equals("close")){
+break;
+}
+
+str2 = br.readLine();
+dout.writeUTF(str2);
+dout.flush();
+}
+din.close();
+s.close();
+ss.close();
+}
+}
+
+
+//
+
+import java.io.*;
+import java.net.*;
+
+class MyClient{
+public static void main(String args[]) throws Exception{
+Socket s = new Socket("localhost" , 3333);
+DataInputStream din = new DataInputStream(s.getInputStream());
+DataOutputStream dout = new DataOutputStream(s.getOutputStream());
+BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+String str = " " , str2 = " " ;
+while (!str.equals("stop")) {
+str = br.readLine();
+dout.writeUTF(str);
+dout.flush();
+
+if(str.equals("close")) {
+break;
+}
+
+str2 = din.readUTF();
+System.out.println("Server Says:" + str2);
+
+}
+
+dout.close();
+s.close();
+}
+}
+
+
+
+// One server to one client (Different devices)
+
+import java.io.*;
+import java.net.*;
+
+public class Server {
+    public static void main(String[] args) {
+        int port = 1234; // Server's port number
+        try {
+            // Create server socket
+            ServerSocket serverSocket = new ServerSocket(port);
+            System.out.println("Server is running and waiting for a client...");
+
+            // Accept a client connection
+            Socket clientSocket = serverSocket.accept();
+            System.out.println("Client connected!");
+
+            // Start a thread to handle reading messages from the client
+            Thread readThread = new Thread(() -> {
+                try {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                    String clientMessage;
+                    while ((clientMessage = in.readLine()) != null) {
+                        System.out.println("Client: " + clientMessage); // Print client message
+                        if (clientMessage.equalsIgnoreCase("exit")) {
+                            System.out.println("Client has disconnected.");
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            // Start a thread to handle writing messages to the client
+            Thread writeThread = new Thread(() -> {
+                try {
+                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                    BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+                    String serverMessage;
+                    while (true) {
+                        serverMessage = userInput.readLine(); // Read input from server user
+                        out.println(serverMessage); // Send to client
+                        System.out.println(serverMessage); // Print server's own message
+                        if (serverMessage.equalsIgnoreCase("exit")) {
+                            System.out.println("Closing connection...");
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            readThread.start();
+            writeThread.start();
+
+            // Wait for threads to finish
+            readThread.join();
+            writeThread.join();
+
+            // Close resources
+            clientSocket.close();
+            serverSocket.close();
+            System.out.println("Server shutdown.");
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+// 
+import java.net.*;
+import java.io.*;
+class MyClient1{
+public static void main(String args[])throws Exception{
+Socket s=new Socket("localhost",3333);
+DataInputStream din=new DataInputStream(s.getInputStream());
+DataOutputStream dout=new DataOutputStream(s.getOutputStream());
+BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+String str="",str2="";
+while(!str.equals("stop")){
+str=br.readLine();
+dout.writeUTF(str);
+dout.flush();
+str2=din.readUTF();
+System.out.println("Server says: "+str2);
+}
+dout.close();
+s.close();
+}}
+
+
+
+//DC_EXP_3)_CPORBA
+
+
+Hello.idl
+
+module HelloApp {
+  interface Hello {
+    string sayHello();
+  };
+};
+
+
+
+// HelloClient.java
+
+import HelloApp.*;
+import org.omg.CORBA.*;
+import java.io.*;
+
+public class HelloClient {
+    public static void main(String args[]) {
+        try {
+            ORB orb = ORB.init(args, null);
+
+            // Read object reference from file
+            BufferedReader br = new BufferedReader(new FileReader("Hello.ref"));
+            String objRef = br.readLine();
+
+            org.omg.CORBA.Object obj = orb.string_to_object(objRef);
+            Hello helloRef = HelloHelper.narrow(obj);
+
+            String response = helloRef.sayHello();
+            System.out.println("Response from Server: " + response);
+        } catch (Exception e) {
+            System.err.println("ERROR: " + e);
+            e.printStackTrace(System.out);
+        }
+    }
+}
+
+
+// HelloServer.java
+
+import HelloApp.*;
+import org.omg.CORBA.*;
+import org.omg.PortableServer.*;
+import org.omg.PortableServer.POA;
+import java.io.*;
+
+public class HelloServer {
+    public static void main(String args[]) {
+        try {
+            ORB orb = ORB.init(args, null);
+            POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+            rootpoa.the_POAManager().activate();
+
+            HelloImpl helloImpl = new HelloImpl();
+            helloImpl.setORB(orb);
+
+            org.omg.CORBA.Object ref = rootpoa.servant_to_reference(helloImpl);
+            Hello href = HelloHelper.narrow(ref);
+
+            // Save object reference to file
+            String objRef = orb.object_to_string(href);
+            FileWriter fw = new FileWriter("Hello.ref");
+            fw.write(objRef);
+            fw.close();
+
+            System.out.println("CORBA HelloServer ready...");
+            orb.run();
+        } catch (Exception e) {
+            System.err.println("ERROR: " + e);
+            e.printStackTrace(System.out);
+        }
+        System.out.println("HelloServer Exiting...");
+    }
+}
+
+
+//HelloImpl.java
+
+import HelloApp.*;
+import org.omg.CORBA.*;
+
+public class HelloImpl extends HelloPOA {
+    private ORB orb;
+
+    public void setORB(ORB orb_val) {
+        orb = orb_val;
+    }
+
+    public String sayHello() {
+        return "\nHello world from CORBA Server!\n";
+    }
+}
+
+
+
+
+PRANAY CHAVAN_212011 <pranaychavan253@student.sfit.ac.in>
+9:32 PM (0 minutes ago)
+to me
+
+C:\Users\Admin\Desktop\CORBA_Hello>idlj -fall Hello.idl
+
+C:\Users\Admin\Desktop\CORBA_Hello>javac HelloApp/*.java HelloImpl.java HelloServer.java HelloClient.java
+Note: HelloApp\HelloPOA.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+C:\Users\Admin\Desktop\CORBA_Hello>java HelloServer -ORBInitialPort 1050 -ORBInitialHost localhost
+CORBA HelloServer ready...
+
+
+
+
+
+
+
+
+C:\Users\Admin\Desktop\CORBA_Hello>java HelloClient -ORBInitialPort 1050 -ORBInitialHost localhost
+Response from Server:
+Hello world from CORBA Server!
+
+
+C:\Users\Admin\Desktop\CORBA_Hello>
+
+
+
+
+Hello.idl
+
+
+module HelloApp {
+  interface Hello {
+    string sayHello();
+    void receiveMessage(in string msg);
+  }
+}
+
+
+idlj -fall Hello.idl
+
+
+
+//HelloIml.java
+
+import HelloApp.*;
+import org.omg.CORBA.*;
+
+public class HelloImpl extends HelloPOA {
+    private ORB orb;
+
+    public void setORB(ORB orb_val) {
+        orb = orb_val;
+    }
+
+    // Called by the client
+    public String sayHello() {
+        System.out.println("Client called sayHello()");
+        return "Hello from Server!";
+    }
+
+    // Called by client to send message
+    public void receiveMessage(String msg) {
+        System.out.println("Received message from client: " + msg);
+    }
+}
+
+
+
+//HelloServer.java
+import HelloApp.*;
+import org.omg.CORBA.*;
+import org.omg.PortableServer.*;
+import org.omg.PortableServer.POA;
+import java.util.Properties;
+
+public class HelloServer {
+    public static void main(String args[]) {
+        try {
+            ORB orb = ORB.init(args, null);
+
+            POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+            rootpoa.the_POAManager().activate();
+
+            HelloImpl helloImpl = new HelloImpl();
+            helloImpl.setORB(orb);
+
+            org.omg.CORBA.Object ref = rootpoa.servant_to_reference(helloImpl);
+            Hello href = HelloHelper.narrow(ref);
+
+            // Bind the object reference in naming
+            org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+            NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+
+            String name = "Hello";
+            NameComponent path[] = ncRef.to_name(name);
+            ncRef.rebind(path, href);
+
+            System.out.println("HelloServer ready and waiting ...");
+
+            orb.run();
+        } catch (Exception e) {
+            System.err.println("ERROR : " + e);
+            e.printStackTrace(System.out);
+        }
+
+        System.out.println("HelloServer Exiting ...");
+    }
+}
+
+
+//HelloClient.java
+import HelloApp.*;
+import org.omg.CORBA.*;
+import org.omg.CosNaming.*;
+import org.omg.CosNaming.NamingContextPackage.*;
+import java.io.*;
+
+public class HelloClient {
+    public static void main(String args[]) {
+        try {
+            ORB orb = ORB.init(args, null);
+
+            // Get reference to NameService
+            org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+            NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+
+            Hello helloRef = HelloHelper.narrow(ncRef.resolve_str("Hello"));
+
+            // Call server method
+            String response = helloRef.sayHello();
+            System.out.println("Server says: " + response);
+
+            // Send message back
+            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+            System.out.print("Type a message to send to server: ");
+            String msg = br.readLine();
+            helloRef.receiveMessage(msg);
+
+        } catch (Exception e) {
+            System.out.println("ERROR : " + e);
+            e.printStackTrace(System.out);
+        }
+    }
+}
+
+
+
+6. Start CORBA Services
+Start ORBD in a separate terminal:
+
+bash
+Copy
+Edit
+orbd -ORBInitialPort 1050
+7. Compile and Run
+✅ Compile all:
+bash
+Copy
+Edit
+javac HelloApp/*.java HelloImpl.java HelloServer.java HelloClient.java
+✅ Run server:
+bash
+Copy
+Edit
+java HelloServer -ORBInitialPort 1050 -ORBInitialHost localhost
+✅ Run client (in another terminal):
+bash
+Copy
+Edit
+java HelloClient -ORBInitialPort 1050 -ORBInitialHost localhost
+
+
+
+dc_exp_1
+
+1. One Server to One Client (Same Device)
+📄 Server.java
+java
+Copy
+Edit
+import java.io.*;
+import java.net.*;
+
+public class Server {
+    public static void main(String[] args) throws IOException {
+        ServerSocket serverSocket = new ServerSocket(1234);
+        System.out.println("Server started. Waiting for client...");
+        Socket socket = serverSocket.accept();
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+        System.out.println("Client connected.");
+
+        String line;
+        while ((line = in.readLine()) != null) {
+            System.out.println("Client: " + line);
+            out.println("Server received: " + line);
+        }
+
+        socket.close();
+        serverSocket.close();
+    }
+}
+📄 Client.java
+java
+Copy
+Edit
+import java.io.*;
+import java.net.*;
+
+public class Client {
+    public static void main(String[] args) throws IOException {
+        Socket socket = new Socket("localhost", 1234);
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+
+        System.out.println("Connected to server.");
+        String input;
+        while ((input = userInput.readLine()) != null) {
+            out.println(input);
+            System.out.println("Server: " + in.readLine());
+        }
+
+        socket.close();
+    }
+}
+
+
+2. One Server to One Client (Different Devices)
+Same code as above, just replace localhost in Client.java with the Server's IP Address.
+
+java
+Copy
+Edit
+// Change this in Client.java
+Socket socket = new Socket("192.168.x.x", 1234); // Replace with server's local IP
+
+
+✅ 3. One Server to Multiple Clients (Different Devices)
+📄 MultiClientServer.java
+java
+Copy
+Edit
+import java.io.*;
+import java.net.*;
+
+public class MultiClientServer {
+    public static void main(String[] args) throws IOException {
+        ServerSocket serverSocket = new ServerSocket(1234);
+        System.out.println("Server started. Waiting for clients...");
+
+        while (true) {
+            Socket socket = serverSocket.accept();
+            System.out.println("New client connected.");
+            new ClientHandler(socket).start();
+        }
+    }
+}
+
+class ClientHandler extends Thread {
+    private Socket socket;
+    private BufferedReader in;
+    private PrintWriter out;
+
+    public ClientHandler(Socket socket) throws IOException {
+        this.socket = socket;
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(socket.getOutputStream(), true);
+    }
+
+    public void run() {
+        try {
+            String input;
+            while ((input = in.readLine()) != null) {
+                System.out.println("Client says: " + input);
+                out.println("Echo from server: " + input);
+            }
+        } catch (IOException e) {
+            System.out.println("Client disconnected.");
+        }
+    }
+}
+📄 Client.java (same as above, just use Server IP)
+java
+Copy
+Edit
+Socket socket = new Socket("192.168.x.x", 1234); // Server's IP
+✅ How to Run
+Compile:
+
+bash
+Copy
+Edit
+javac Server.java
+javac Client.java
+javac MultiClientServer.java
+Run Server on one terminal:
+
+bash
+Copy
+Edit
+java Server            // or java MultiClientServer
+Run Client(s) on other terminals or devices:
+
+bash
+Copy
+Edit
+java Client
+
+
+
+
+
+
+
+
